@@ -1,49 +1,34 @@
 package task08;
 
-
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Thread.sleep;
-
 
 public class Main {
-    private static final int ACCURACY = 100000000;
+    private static final long ACCURACY = 100000000;
     private static Worker[] threads;
 
-    static public void oko(String[] args) {
+    static public void main(String[] args) {
         int threadsNumber = 10;
-        int pivot = ACCURACY;
+        long pivot = ACCURACY;
 
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                sleep(2500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            List<Integer> iterations = new ArrayList<>();
-            List<Double> results = new ArrayList<>();
+        Signal.handle(new Signal("INT"), sig -> {
+            System.out.println("Caught signal: " + sig);
+
+            double res = 0.0;
 
             for (var thread : threads) {
-                iterations.add(thread.getIteration() % ACCURACY);
-                results.add(thread.getResult());
+                res += thread.getResult();
                 thread.interrupt();
             }
 
-            int maxIteration = iterations.stream().max(Integer::compare).orElse(0);
-
-            for (int i = 0; i < iterations.size(); i++) {
-                Double temp = results.get(i);
-                temp += calculateRest(iterations.get(i) + ACCURACY * i, maxIteration + ACCURACY * i, results.get(i));
-                results.set(i, temp);
-            }
-
-            System.out.println("Result value (after interruption): " + results.stream()
-                    .mapToDouble(Double::doubleValue)
-                    .sum());
-        }));
+            System.out.println("Result value (after interruption): " + res * 4.0);
+            System.exit(0);
+        });
 
         try {
             threadsNumber = Integer.parseInt(args[0]);
@@ -52,10 +37,14 @@ public class Main {
             return;
         }
 
+        System.out.println("Number of threads: " + threadsNumber);
+
         if (threadsNumber < 1 || threadsNumber > 10000) {
             System.err.println("Incorrect number of threads");
             return;
         }
+
+        System.out.println("Press ctrl+c to interrupt");
 
         threads = new Worker[threadsNumber];
 
@@ -74,40 +63,6 @@ public class Main {
             sum += thread.getResult();
         }
 
-        System.out.println("Result value: " + sum);
-    }
-
-    private static double calculateRest(int from, int to, double result) {
-        if (from == to) {
-            return 0.0;
-        }
-
-        for (int i = from; i < to; i++) {
-            result += Math.pow(-1, i) / (2 * i + 1);
-        }
-
-        return result * 4.0;
-    }
-
-    static public void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                sleep(2500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Shutdown hook executed!");
-        }));
-
-        System.out.println("Program is running... Press Ctrl+C to stop.");
-
-        // Бесконечный цикл, чтобы программа не завершилась мгновенно
-        while (true) {
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        System.out.println("Result value: " + sum * 4.0);
     }
 }

@@ -1,18 +1,13 @@
 package task08;
 
 public class Worker extends Thread {
-    int from;
-    int to;
-    int i;
+    long from;
+    long to;
     double result = 0.0;
 
-    public Worker(int from, int to) {
+    public Worker(long from, long to) {
         this.from = from;
         this.to = to;
-    }
-
-    public int getIteration() {
-        return i;
     }
 
     public double getResult() {
@@ -21,10 +16,9 @@ public class Worker extends Thread {
 
     @Override
     public void run() {
-        for (i = from; i < to; i++) {
+        for (long i = from; i < to; i++) {
             result += Math.pow(-1, i) / (2 * i + 1);
         }
 
-        result *= 4.0;
     }
 }
