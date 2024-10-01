@@ -1,4 +1,4 @@
-package task09;
+package ru.nsu.buzyurkin.task09;
 
 import java.util.Random;
 

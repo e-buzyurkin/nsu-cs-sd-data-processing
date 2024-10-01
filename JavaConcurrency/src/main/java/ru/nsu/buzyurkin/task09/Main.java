@@ -1,4 +1,4 @@
-package task09;
+package ru.nsu.buzyurkin.task09;
 
 public class Main {
     private static final int NUMBER_OF_PHILOSOPHERS = 5;
