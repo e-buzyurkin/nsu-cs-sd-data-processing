@@ -1,4 +1,4 @@
-package task07;
+package ru.nsu.buzyurkin.task07;
 
 public class Main {
     private static final int ACCURACY = 10000;

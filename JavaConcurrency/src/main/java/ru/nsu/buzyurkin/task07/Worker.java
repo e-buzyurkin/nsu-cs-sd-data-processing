@@ -1,4 +1,4 @@
-package task07;
+package ru.nsu.buzyurkin.task07;
 
 public class Worker extends Thread {
     int from;
