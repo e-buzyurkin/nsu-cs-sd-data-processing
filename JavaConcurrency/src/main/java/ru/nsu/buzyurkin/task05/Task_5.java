@@ -1,4 +1,4 @@
-package task05;
+package ru.nsu.buzyurkin.task05;
 
 public class Task_5 {
 
