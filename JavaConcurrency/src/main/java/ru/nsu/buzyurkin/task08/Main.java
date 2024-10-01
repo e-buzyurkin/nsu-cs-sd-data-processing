@@ -1,10 +1,6 @@
-package task08;
+package ru.nsu.buzyurkin.task08;
 
 import sun.misc.Signal;
-import sun.misc.SignalHandler;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class Main {
