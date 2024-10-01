@@ -1,4 +1,4 @@
-package task06;
+package ru.nsu.buzyurkin.task06;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 

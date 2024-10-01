@@ -1,4 +1,4 @@
-package task06;
+package ru.nsu.buzyurkin.task06;
 
 public class Main {
     static public void main(String[] args) {

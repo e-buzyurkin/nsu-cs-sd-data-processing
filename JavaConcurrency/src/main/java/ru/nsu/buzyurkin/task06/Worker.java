@@ -1,4 +1,4 @@
-package task06;
+package ru.nsu.buzyurkin.task06;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
