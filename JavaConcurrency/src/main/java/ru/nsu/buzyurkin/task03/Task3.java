@@ -1,4 +1,4 @@
-package task03;
+package ru.nsu.buzyurkin.task03;
 
 import java.util.ArrayList;
 import java.util.List;
