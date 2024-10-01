@@ -1,4 +1,4 @@
-package task04;
+package ru.nsu.buzyurkin.task04;
 
 public class Task4 {
     public static void main(String[] args) {
