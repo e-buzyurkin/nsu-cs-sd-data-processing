@@ -16,7 +16,7 @@ public class Worker extends Thread {
 
     @Override
     public void run() {
-        for (long i = from; i < to; i++) {
+        for (long i = from;; i++) {
             result += Math.pow(-1, i) / (2 * i + 1);
         }
 
