@@ -10,7 +10,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 3) {
-            System.err.println("Usage: java AsyncTcpProxy <listening_port> <remote_host> <remote_port>");
+            System.err.println("needed 3 args <listening_port> <remote_host> <remote_port>");
             return;
         }
 
@@ -18,16 +18,13 @@ public class Main {
         String remoteHost = args[1];
         int remotePort = Integer.parseInt(args[2]);
 
-        // Create a server socket and bind to the listening port
         try (ServerSocket serverSocket = new ServerSocket(listeningPort)) {
             System.out.println("Server is listening on port " + listeningPort);
 
             while (true) {
-                // Accept incoming connections
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Accepted connection from client: " + clientSocket.getRemoteSocketAddress());
 
-                // Handle the connection asynchronously
                 handleConnection(clientSocket, remoteHost, remotePort);
             }
         }
@@ -37,15 +34,12 @@ public class Main {
         CompletableFuture.runAsync(() -> {
             Socket serverSocket = null;
             try {
-                // Connect to the remote server
                 serverSocket = new Socket(remoteHost, remotePort);
                 System.out.println("Connected to remote server: " + remoteHost + ":" + remotePort);
 
-                // Start bidirectional data transfer
                 CompletableFuture<Void> clientToServer = transferData(clientSocket, serverSocket);
                 CompletableFuture<Void> serverToClient = transferData(serverSocket, clientSocket);
 
-                // Wait for either transfer to complete (indicating disconnection)
                 CompletableFuture.anyOf(clientToServer, serverToClient).join();
             } catch (Exception e) {
                 System.err.println("Error handling connection: " + e.getMessage());
