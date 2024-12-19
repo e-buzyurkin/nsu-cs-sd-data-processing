@@ -42,9 +42,9 @@
            ;; Инициализация начального расстояния
            (swap! distances assoc from 0)
 
-           (while (seq @queue)
-                  (let [[current distance] (first @queue)]
-                       (swap! queue rest) ;; Удаляем текущий элемент из очереди
+           (while (not (empty? @queue))
+                  (let [[current distance] (first (sort-by second @queue))]
+                       (swap! queue #(remove #{[current distance]} %)) ;; Удаляем текущий элемент из очереди
 
                        ;; Обновляем соседей
                        (doseq [[neighbor {:keys [price tickets]}] (get-in route-map [:forward current])]
