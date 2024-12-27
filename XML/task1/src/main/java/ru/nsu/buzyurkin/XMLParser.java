@@ -58,9 +58,12 @@ public class XMLParser {
 
                     case "gender":
                         String gender = parseSingleField(reader, attributes);
-                        if (gender.equals("female") || gender.equals("F")) currentPerson.tryUpdateGender(Gender.Female);
-                        else if (gender.equals("male") || gender.equals("M"))
+                        if (gender.equals("female") || gender.equals("F")) {
+                            currentPerson.tryUpdateGender(Gender.Female);
+                        }
+                        else if (gender.equals("male") || gender.equals("M")) {
                             currentPerson.tryUpdateGender(Gender.Male);
+                        }
                         break;
 
                     case "spouce":
@@ -79,12 +82,7 @@ public class XMLParser {
 
                         spouce = new Person();
                         spouce.tryUpdateId(spouceInfo);
-                        if (elementName.equals("wife")) {
-                            spouce.tryUpdateGender(Gender.Female);
-                        }
-                        if (elementName.equals("husband")) {
-                            spouce.tryUpdateGender(Gender.Male);
-                        }
+                        spouce.tryUpdateGender(elementName.equals("wife") ? Gender.Female : Gender.Male);
 
                         spouce.tryUpdateSpouce(currentPerson);
                         currentPerson.tryUpdateSpouce(spouce);
@@ -110,8 +108,7 @@ public class XMLParser {
 
                         parent = new Person();
                         parent.tryUpdateFullname(parentInfo);
-                        if (elementName.equals("mother")) parent.tryUpdateGender(Gender.Female);
-                        if (elementName.equals("father")) parent.tryUpdateGender(Gender.Male);
+                        parent.tryUpdateGender(elementName.equals("mother") ? Gender.Female : Gender.Male);
 
                         parent.tryUpdateChildList(currentPerson);
                         currentPerson.tryUpdateParentList(parent);
@@ -125,8 +122,12 @@ public class XMLParser {
                             child.tryUpdateParentList(currentPerson);
                             currentPerson.tryUpdateChildList(child);
 
-                            if (child.id == -1) nameEntries.add(child);
-                            else idEntries.add(child);
+                            if (child.id == -1) {
+                                nameEntries.add(child);
+                            }
+                            else {
+                                idEntries.add(child);
+                            }
                         }
                         break;
 
@@ -136,8 +137,12 @@ public class XMLParser {
                             sibling.tryUpdateSiblingList(currentPerson);
                             currentPerson.tryUpdateSiblingList(sibling);
 
-                            if (sibling.id != -1) idEntries.add(sibling);
-                            else nameEntries.add(sibling);
+                            if (sibling.id != -1) {
+                                idEntries.add(sibling);
+                            }
+                            else {
+                                nameEntries.add(sibling);
+                            }
                         }
                         break;
 
@@ -211,8 +216,8 @@ public class XMLParser {
             if (person.spouceId == -1) continue;
 
             Person spouce = idMap.get(person.spouceId);
-            if (spouce.gender == Gender.Female) person.tryUpdateGender(Gender.Male);
-            else if (spouce.gender == Gender.Male) person.tryUpdateGender(Gender.Female);
+            if (spouce.gender == null) continue;
+            person.tryUpdateGender(spouce.gender == Gender.Female ? Gender.Male : Gender.Female);
         }
     }
 
@@ -225,15 +230,19 @@ public class XMLParser {
         }
     }
 
-    private static void mergeNamedNamesakes(Map<Integer, Person> idMap, String name, List<Person> namedPeople) {
+    private static void mergeNamedNamesakes(Map<Integer, Person> idMap, String name, List<Person> namedPeople) throws PersonMergeException, IllegalRelativeException {
         List<Person> namesakesWithId = idMap.values().parallelStream().filter(p -> name.equals(p.fullname())).toList();
 
         for (Person namedPerson : namedPeople) {
             for (Person namesake : namesakesWithId) {
-                try {
-                    namesake.tryMerge(namedPerson);
-                } catch (PersonMergeException | IllegalRelativeException e) {
+//                if (namesake.fullname().equals("Kaylene Startz")) {
+//                    System.nanoTime();
+//                }
+
+                if (!namedPerson.anythingCommonBesidesName(namesake)) {
+                    continue;
                 }
+                namesake.tryMerge(namedPerson);
                 break;
             }
         }
@@ -328,8 +337,7 @@ public class XMLParser {
                 siblingInfo = parseSingleField(reader, event.asStartElement().getAttributes());
                 String elementName = event.asStartElement().getName().getLocalPart();
                 switch (elementName) {
-                    case "brother":
-                    case "sister":
+                    case "sister", "brother":
                         Person sibling = new Person();
                         sibling.tryUpdateFullname(siblingInfo);
 

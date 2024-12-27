@@ -12,5 +12,13 @@ public class Main {
         Map<Integer, Person> idMap = XMLParser.parse(file);
         List<Person> people = new ArrayList<>(idMap.values());
         System.out.println(people.size());
+        List<Person> allKaylenes = extractByName("Kaylene Startz", people);
+        for (Person kaylene : allKaylenes) {
+            System.out.println(kaylene.toStringVerbose());
+        }
+    }
+
+    private static List<Person> extractByName(String name, List<Person> people) {
+        return people.stream().filter(person -> person.fullname().equals(name)).toList();
     }
 }

@@ -230,6 +230,55 @@ public class Person {
         tryUpdateSpouce(spouce);
     }
 
+    public boolean anythingCommonBesidesName(Person newPerson) {
+        // if ids are different then its def different people
+        if (this.id != -1 && this.id == newPerson.id) {
+            return true;
+        }
+        // if spouces are different then its def different people
+        if (this.spouceId != -1 && newPerson.spouceId != -1 && this.spouceId != newPerson.spouceId) {
+            return false;
+        // if spouces are same then its the same person
+        } else if (newPerson.spouceId != -1 && this.spouceId == newPerson.spouceId) {
+            return true;
+        }
+        // same with gender
+        if (this.gender != null && newPerson.gender != null && this.gender != newPerson.gender) {
+            return false;
+        }
+        // if they have different number of children, then its def different person
+        if (this.childrenCheckNumber != -1 && newPerson.childrenCheckNumber != -1 && this.childrenCheckNumber != newPerson.childrenCheckNumber) {
+            return false;
+        }
+        // same with siblings
+        if (this.siblingsCheckNumber != -1 && newPerson.siblingsCheckNumber != -1 && this.siblingsCheckNumber != newPerson.siblingsCheckNumber) {
+            return false;
+        }
+
+        // if they have same siblings, then its the same person
+        Set<Integer> intersection = new HashSet<>(this.siblingsIds);
+        intersection.retainAll(newPerson.siblingsIds);
+        if (!newPerson.siblingsIds.isEmpty() && !this.siblingsIds.isEmpty() && !intersection.isEmpty()) {
+            return true;
+        }
+
+        // same with children
+        intersection = new HashSet<>(this.childrenIds);
+        intersection.retainAll(newPerson.childrenIds);
+        if (!newPerson.childrenIds.isEmpty() && !this.siblingsIds.isEmpty() && !intersection.isEmpty()) {
+            return true;
+        }
+
+        // if they have more siblings than checknumber, then its def different people
+        if (this.siblingsIds.size() > newPerson.siblingsCheckNumber
+            || newPerson.siblingsIds.size() > this.siblingsCheckNumber) {
+            return false;
+        }
+
+        // if we couldnt spot the difference, assume they're the same person
+        return true;
+    }
+
     private boolean childrenOverflow(Set<Integer> oldList, Set<Integer> newList) {
         if (this.childrenCheckNumber == -1) return false;
 
@@ -264,4 +313,29 @@ public class Person {
         if (this.fullname() != null) return "[" + id + "]: " + fullname();
         else return "[" + id + "]";
     }
+
+    public String toStringVerbose() {
+        StringBuilder result = new StringBuilder();
+
+        result.append("Person {\n");
+        result.append("  fullname: ").append(this.fullname());
+        result.append("  id: ").append(id).append(",\n");
+        result.append("  gender: ").append(gender).append(",\n");
+        result.append("  spouceId: ").append(spouceId).append(",\n");
+        result.append("  childrenCheckNumber: ").append(childrenCheckNumber).append(",\n");
+        result.append("  siblingsCheckNumber: ").append(siblingsCheckNumber).append(",\n");
+        result.append("  firstName: ").append(firstName).append(",\n");
+        result.append("  familyName: ").append(familyName).append(",\n");
+        result.append("  spouceName: ").append(spouceName).append(",\n");
+        result.append("  parentsIds: ").append(parentsIds).append(",\n");
+        result.append("  parentsNames: ").append(parentsNames).append(",\n");
+        result.append("  childrenIds: ").append(childrenIds).append(",\n");
+        result.append("  childrenNames: ").append(childrenNames).append(",\n");
+        result.append("  siblingsIds: ").append(siblingsIds).append(",\n");
+        result.append("  siblingsNames: ").append(siblingsNames).append("\n");
+        result.append("}");
+
+        return result.toString();
+    }
+
 }
