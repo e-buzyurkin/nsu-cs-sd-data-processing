@@ -13,14 +13,14 @@ public class Person {
     public int spouceId = -1;
     public int childrenCheckNumber = -1;
     public int siblingsCheckNumber = -1;
-    private String firstName = null;
-    private String familyName = null;
-    private String spouceName = null;
-    private final Set<Integer> parentsIds = new HashSet<>();
+    public String firstName = null;
+    public String familyName = null;
+    public String spouceName = null;
+    public final Set<Integer> parentsIds = new HashSet<>();
     private final Set<String> parentsNames = new HashSet<>(2);
-    private final Set<Integer> childrenIds = new HashSet<>();
+    public final Set<Integer> childrenIds = new HashSet<>();
     private final Set<String> childrenNames = new HashSet<>();
-    private final Set<Integer> siblingsIds = new HashSet<>();
+    public final Set<Integer> siblingsIds = new HashSet<>();
     private final Set<String> siblingsNames = new HashSet<>();
 
     public void tryUpdateId(int newId) throws PersonMergeException {
