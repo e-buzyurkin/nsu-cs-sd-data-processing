@@ -33,10 +33,6 @@ public class Main {
         }
         System.out.println("SETTING INFO ABOUT PEOPLE");
         for (var person : collectedData.values()) {
-            if (person.getName() == "Kaylene Startz") {
-                int k = 0;
-            }
-
             setSpouse(person);
             setChildren(person);
             setParents(person);
