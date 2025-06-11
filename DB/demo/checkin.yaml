@@ -1,0 +1,66 @@
+paths:
+  /checkin:
+    post:
+      summary: Регистрация на рейс
+      description: >-
+        Позволяет пассажиру выполнить онлайн регистрацию на рейс, используя
+        информация, полученную после покупки.
+      operationId: checkInFlight
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+        required: true
+      responses:
+        '200':
+          description: Регистрация на рейс выполнена успешно. Пользователь может лететь.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinResponse'
+        '400':
+          description: 'Некорректный запрос, проверьте предоставленные данные'
+          content:
+            '*/*':
+              schema:
+                type: object
+        '404':
+          description: Бронирование не найдено
+          content:
+            '*/*':
+              schema:
+                type: object
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            '*/*':
+              schema:
+                type: object
+
+components:
+  schemas:
+    CheckInRequest:
+      required:
+        - ticketNo
+        - passengerName
+      type: object
+      properties:
+        ticketNo:
+          type: string
+          description: номер билета
+        passengerName:
+          type: string
+          description: имя пассажира
+
+    CheckinResponse:
+      type: object
+      properties:
+        seatNumber:
+          type: string
+          description: >-
+            Номер места
+          example: 13B
+        boardingPassNo:
+          type: string
+          description: номер посадочного талона
