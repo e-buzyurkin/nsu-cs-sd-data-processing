@@ -1,25 +1,23 @@
 
-GET http://localhost:8080/airports/Volgograd?lang=RU
+GET http://localhost:8080/airports/Volgograd
 
 ###
-GET http://localhost:8080/cities?lang=EN
+GET http://localhost:8080/cities?lang=RU
 
 ###
-GET http://localhost:8080/departures/KHV?fromTime=18:00&toTime=19:00
-
-
-# доделать на будущее время
-###
-GET http://localhost:8080/routes?source=OVB&destination=SVO&departureDate=2025-12-11&maxConnections=2
+GET http://localhost:8080/arrivals/KHV?fromTime=18:00&toTime=19:00&flightNumber=PG0651&daysOfWeek=MONDAY,FRIDAY
 
 
 ###
-# ticketno должен зависеть от рейса
+GET http://localhost:8080/routes?source=OVB&destination=SVO&departureDate=2016-12-11&maxConnections=2
+
+
+###
 POST http://localhost:8080/booking/create
 Content-Type: application/json
 
 {
-  "flightIds": [69360, 172267],
+  "flightIds": [69360, 185186],
   "fareConditions": "Economy",
   "passengerId": "someid"
 }

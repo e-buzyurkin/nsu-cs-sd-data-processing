@@ -1,12 +1,14 @@
 package com.example.demo.entity.booking;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import lombok.Data;
 
 @Entity
 @Data
 @IdClass(SeatId.class)
-@Table(name = "seats")
 public class Seat {
 	@Id
 	@Column(name = "aircraft_code")
