@@ -86,6 +86,14 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                          WHERE fare_conditions = CAST(:fareClass AS text)
                          GROUP BY flight_id
                      ),
+                     unique_flights AS (
+                             SELECT DISTINCT ON (f.flight_no)\s
+                                 f.*
+                             FROM flights f
+                             WHERE
+                                 EXTRACT(DOW FROM f.scheduled_departure) = EXTRACT(DOW FROM CAST(:departureDate AS timestamp))
+                             ORDER BY f.flight_no, f.scheduled_departure
+                         ),
                      flight_routes AS (
                      SELECT
                          f.departure_airport AS departure_airport,
@@ -94,9 +102,16 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                                'flight_no', f.flight_no,
                                'aircraft_code', f.aircraft_code,
                                'departure_airport', f.departure_airport,
-                               'departure_datetime', f.scheduled_departure,
+                               'departure_datetime',\s
+                                                 (CAST(:departureDate AS date) +\s
+                                                  CAST(f.scheduled_departure AS time)) AT TIME ZONE 'UTC',
                                'arrival_airport', f.arrival_airport,
-                               'arrival_datetime', f.scheduled_arrival,
+                               'arrival_datetime',\s
+                                     (CAST(:departureDate AS date) +\s
+                                      CAST(f.scheduled_arrival AS time) +
+                                      CASE WHEN CAST(f.scheduled_departure AS time) > CAST(f.scheduled_arrival AS time)\s
+                                           THEN INTERVAL '1 day'\s
+                                           ELSE INTERVAL '0' END) AT TIME ZONE 'UTC',
                                'tickets_free', COALESCE(sc.total_seats, 0) - COALESCE(tc.sold_seats, 0)
                             )] AS route,
                          ARRAY[
@@ -105,15 +120,18 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                          ] AS visited,
                          0 AS connections,
                          f.scheduled_arrival AS last_arrival,
-                         f.arrival_airport AS last_airport
-                     FROM flights f
+                         f.arrival_airport AS last_airport,
+                         EXTRACT(DOW FROM f.scheduled_departure) AS departure_day_of_week,
+                         CAST(f.scheduled_departure AS time) AS departure_time
+                     FROM unique_flights f
                      LEFT JOIN seat_counts sc ON sc.aircraft_code = f.aircraft_code
                      LEFT JOIN ticket_counts tc ON tc.flight_id = f.flight_id
                      JOIN airports_data AS a ON a.airport_code = f.arrival_airport
                      JOIN airports_data AS d ON d.airport_code = f.departure_airport
                      WHERE
-                         f.scheduled_departure >= CAST(:departureDate AS timestamp)
-                         AND f.scheduled_departure < CAST(:departureDate AS timestamp) + INTERVAL '1 day'
+                         -- Проверяем день недели и время вместо конкретной даты
+                         EXTRACT(DOW FROM f.scheduled_departure) = EXTRACT(DOW FROM CAST(:departureDate AS timestamp))
+                         AND CAST(f.scheduled_departure AS time) >= CAST(:departureDate AS timestamp)::time
                          AND (f.departure_airport IN (SELECT airport_code
                              FROM airports_data
                              WHERE (LOWER(city->>'en') = LOWER(:departurePoint) OR LOWER(city->>'ru') = LOWER(:departurePoint))) OR f.departure_airport = :departurePoint)
@@ -126,21 +144,30 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                                    'flight_no', f.flight_no,
                                    'aircraft_code', f.aircraft_code,
                                    'departure_airport', f.departure_airport,
-                                   'departure_datetime', f.scheduled_departure,
+                                   'departure_datetime',\s
+                                                 (CAST(:departureDate AS date) +\s
+                                                  CAST(f.scheduled_departure AS time)) AT TIME ZONE 'UTC',
                                    'arrival_airport', f.arrival_airport,
-                                   'arrival_datetime', f.scheduled_arrival,
+                                   'arrival_datetime',\s
+                                         (CAST(:departureDate AS date) +\s
+                                          CAST(f.scheduled_arrival AS time) +
+                                          CASE WHEN CAST(f.scheduled_departure AS time) > CAST(f.scheduled_arrival AS time)\s
+                                               THEN INTERVAL '1 day'\s
+                                               ELSE INTERVAL '0' END) AT TIME ZONE 'UTC',
                                    'tickets_free', COALESCE(sc.total_seats, 0) - COALESCE(tc.sold_seats, 0))) AS route,
                          ARRAY_APPEND(fr.visited, a.city->>'en') AS visited,
                          fr.connections + 1 AS connections,
                          f.scheduled_arrival AS last_arrival,
-                         f.arrival_airport AS last_airport
+                         f.arrival_airport AS last_airport,
+                         fr.departure_day_of_week,
+                         fr.departure_time
                      FROM flight_routes fr
                      JOIN airports_data AS d ON d.airport_code = fr.last_airport
                      JOIN
-                         flights f ON f.scheduled_departure <= fr.last_arrival + INTERVAL '14 hour' AND (fr.last_airport = f.departure_airport OR
+                         unique_flights f ON f.scheduled_departure <= fr.last_arrival + INTERVAL '14 hour' AND (fr.last_airport = f.departure_airport OR
                              EXISTS (
                                  SELECT 1 FROM airports_data ad1
-                                 JOIN airports_data ad2 ON\s
+                                 JOIN airports_data ad2 ON
                                      ad1.city->>'en' = ad2.city->>'en'
                                  WHERE ad1.airport_code = fr.last_airport
                                  AND ad2.airport_code = f.departure_airport
@@ -151,6 +178,7 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                      WHERE
                          fr.connections < :maxConnections
                          AND a.city->>'en' != ALL (visited)
+                         AND EXTRACT(DOW FROM f.scheduled_departure) = fr.departure_day_of_week
                          AND
                              ((fr.last_airport = f.departure_airport AND f.scheduled_departure >= fr.last_arrival + INTERVAL '1 hour')
                              OR
@@ -160,7 +188,6 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                  SELECT array_to_json(fr.route) AS fs FROM flight_routes fr WHERE fr.last_airport IN 
                       (SELECT airport_code
                              FROM airports_data
-                             WHERE LOWER(city->>'en') = LOWER(:arrivalPoint) OR LOWER(city->>'ru') = LOWER(:arrivalPoint)) 
                                     OR fr.last_airport = :arrivalPoint
             ;
             """)
