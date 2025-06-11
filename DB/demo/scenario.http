@@ -9,7 +9,7 @@ GET http://localhost:8080/arrivals/KHV?fromTime=18:00&toTime=19:00&flightNumber=
 
 
 ###
-GET http://localhost:8080/routes?source=OVB&destination=SVO&departureDate=2016-12-11&maxConnections=2
+GET http://localhost:8080/routes?source=OVB&destination=SVO&departureDate=2025-12-11&maxConnections=2
 
 
 ###
