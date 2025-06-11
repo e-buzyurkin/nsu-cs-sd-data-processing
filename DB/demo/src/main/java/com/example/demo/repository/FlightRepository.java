@@ -86,6 +86,15 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                          WHERE fare_conditions = CAST(:fareClass AS text)
                          GROUP BY flight_id
                      ),
+                     unique_flights AS (
+                          SELECT DISTINCT ON (f.flight_no)
+                              f.*
+                          FROM flights f
+                          WHERE
+                              EXTRACT(DOW FROM f.scheduled_departure) = EXTRACT(DOW FROM CAST(:departureDate AS timestamp))
+                           OR EXTRACT(DOW FROM f.scheduled_departure) = EXTRACT(DOW FROM (CAST(:departureDate AS timestamp) + INTERVAL '1 DAY'))
+                          ORDER BY f.flight_no, f.scheduled_departure
+                     ),
                      flight_routes AS (
                      SELECT
                          f.departure_airport AS departure_airport,
@@ -94,9 +103,16 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                                'flight_no', f.flight_no,
                                'aircraft_code', f.aircraft_code,
                                'departure_airport', f.departure_airport,
-                               'departure_datetime', f.scheduled_departure,
+                               'departure_datetime',
+                                    (CAST(:departureDate AS date) +
+                                     CAST(f.scheduled_departure AS time)),
                                'arrival_airport', f.arrival_airport,
-                               'arrival_datetime', f.scheduled_arrival,
+                               'arrival_datetime',
+                                    (CAST(:departureDate AS date) +
+                                     CAST(f.scheduled_arrival AS time) +
+                                     CASE WHEN CAST(f.scheduled_departure AS time) > CAST(f.scheduled_arrival AS time)
+                                          THEN INTERVAL '1 day'
+                                          ELSE INTERVAL '0' END),
                                'tickets_free', COALESCE(sc.total_seats, 0) - COALESCE(tc.sold_seats, 0)
                             )] AS route,
                          ARRAY[
@@ -106,15 +122,13 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                          0 AS connections,
                          f.scheduled_arrival AS last_arrival,
                          f.arrival_airport AS last_airport
-                     FROM flights f
+                     FROM unique_flights f
                      LEFT JOIN seat_counts sc ON sc.aircraft_code = f.aircraft_code
                      LEFT JOIN ticket_counts tc ON tc.flight_id = f.flight_id
                      JOIN airports_data AS a ON a.airport_code = f.arrival_airport
                      JOIN airports_data AS d ON d.airport_code = f.departure_airport
                      WHERE
-                         f.scheduled_departure >= CAST(:departureDate AS timestamp)
-                         AND f.scheduled_departure < CAST(:departureDate AS timestamp) + INTERVAL '1 day'
-                         AND (f.departure_airport IN (SELECT airport_code
+                         (f.departure_airport IN (SELECT airport_code
                              FROM airports_data
                              WHERE (LOWER(city->>'en') = LOWER(:departurePoint) OR LOWER(city->>'ru') = LOWER(:departurePoint))) OR f.departure_airport = :departurePoint)
                      UNION ALL
@@ -126,9 +140,16 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                                    'flight_no', f.flight_no,
                                    'aircraft_code', f.aircraft_code,
                                    'departure_airport', f.departure_airport,
-                                   'departure_datetime', f.scheduled_departure,
-                                   'arrival_airport', f.arrival_airport,
-                                   'arrival_datetime', f.scheduled_arrival,
+                                   'departure_datetime',
+                                    (CAST(:departureDate AS date) +
+                                     CAST(f.scheduled_departure AS time)),
+                               'arrival_airport', f.arrival_airport,
+                               'arrival_datetime',
+                                    (CAST(:departureDate AS date) +
+                                     CAST(f.scheduled_arrival AS time) +
+                                     CASE WHEN CAST(f.scheduled_departure AS time) > CAST(f.scheduled_arrival AS time)
+                                          THEN INTERVAL '1 day'
+                                          ELSE INTERVAL '0' END),
                                    'tickets_free', COALESCE(sc.total_seats, 0) - COALESCE(tc.sold_seats, 0))) AS route,
                          ARRAY_APPEND(fr.visited, a.city->>'en') AS visited,
                          fr.connections + 1 AS connections,
