@@ -7,6 +7,7 @@ import com.example.demo.dto.booking.CreateBookingDto;
 import com.example.demo.entity.booking.Booking;
 import com.example.demo.entity.booking.Ticket;
 import com.example.demo.entity.booking.TicketFlight;
+import com.example.demo.entity.generator.TicketIdGenerator;
 import com.example.demo.repository.FlightRepository;
 import com.example.demo.repository.booking.BookingRepository;
 import com.example.demo.repository.booking.SeatRepository;
@@ -17,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional()
@@ -67,19 +66,18 @@ public class FlightBookingService {
 				.build();
 		String bookRef = bookingRepository.save(booking).getBookRef();
 
-		Ticket ticket = Ticket.builder()
-				.bookRef(bookRef)
-				.passengerId(createBookingDto.getPassengerId())
-				.passengerName("Evgeniy Buzyurkin")
-				.contactData(new ContactInfoDto("666"))
-				.build();
-		String ticketNo = ticketRepository.save(ticket).getTicketNo();
+		List<String> ticketNoList = new ArrayList<>();
+		createBookingDto.getFlightIds().forEach((Integer flightId) -> {
+			Ticket ticket = Ticket.builder()
+					.bookRef(bookRef)
+					.passengerId(String.valueOf(createBookingDto.getPassengerName().hashCode()))
+					.passengerName(createBookingDto.getPassengerName())
+					.contactData(new ContactInfoDto("666"))
+					.build();
+			String ticketNo = ticketRepository.save(ticket).getTicketNo();
 
-		System.out.println(bookRef);
-		System.out.println(ticketNo);
+			ticketNoList.add(ticketNo);
 
-
-		for (var flightId : createBookingDto.getFlightIds()) {
 			TicketFlight ticketFlight = new TicketFlight(
 					ticketNo,
 					flightId,
@@ -87,10 +85,14 @@ public class FlightBookingService {
 					prices.get(flightId)
 			);
 			ticketFlightRepository.save(ticketFlight);
-		}
+		});
 
 
-		return new BookingDto(bookRef, ticketNo, totalPrice);
+
+		System.out.println(bookRef);
+
+
+		return new BookingDto(bookRef, ticketNoList, totalPrice);
 	}
 
 }

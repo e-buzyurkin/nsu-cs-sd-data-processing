@@ -12,5 +12,5 @@ import java.util.List;
 public class CreateBookingDto {
     private List<Integer> flightIds;
     private FareConditionDto fareConditions;
-    private String passengerId;
+    private String passengerName;
 }

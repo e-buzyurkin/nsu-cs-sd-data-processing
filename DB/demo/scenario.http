@@ -17,8 +17,8 @@ POST http://localhost:8080/booking/create
 Content-Type: application/json
 
 {
-  "flightIds": [69360, 185186],
+  "flightIds": [69360, 70820],
   "fareConditions": "Economy",
-  "passengerId": "someid"
+  "passengerName": "Evgeniy Buzyurkin"
 }
 

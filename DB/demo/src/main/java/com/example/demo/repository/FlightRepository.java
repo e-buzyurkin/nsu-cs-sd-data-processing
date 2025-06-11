@@ -201,7 +201,8 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
             SELECT flights_price.price\s
             FROM flights_price\s
             JOIN flights ON flights.flight_no = flights_price.flight_no
-            WHERE fare_conditions=:fareConditions AND flights.flight_id=:flightId;
+            WHERE fare_conditions=:fareConditions AND flights.flight_id=:flightId
+            LIMIT 1;
             """, nativeQuery = true)
     Optional<Double> findPriceByFlightId(
             @Param("flightId") Integer flightId,
